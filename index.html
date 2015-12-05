@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="build/react.js"></script>
+    <script src="build/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+  </head>
+  <body>
+    <div id="myDiv"></div>
+    <script type="text/babel">
+
+    var FilteredList = React.createClass({
+      addToList: function(event){
+        var updatedList = this.state.initialItems;        
+        updatedList.unshift(this.state.toDoItem);        
+        this.setState({items: updatedList, value: ''});
+      },
+      handleToDo: function(event){
+        this.setState({toDoItem: event.target.value, value: event.target.value});
+      },
+  getInitialState: function(){
+     return {
+       initialItems: [         
+       ],
+       items: [],
+       value: ''
+     }
+  },
+  componentWillMount: function(){
+    this.setState({items: this.state.initialItems})
+  },
+  render: function(){
+    return (
+      <div className="filter-list">
+        <input type="text" value={this.state.value} onChange={this.handleToDo}/>
+        <button type="button" onClick={this.addToList}>ToDo</button>
+        <div>{
+        this.state.items.map(function(item) {
+          return <div><input type="checkbox"/>{item}</div>
+          }) 
+        }
+        </div>
+      </div>
+    );
+  }
+});
+
+
+    ReactDOM.render(
+      <FilteredList name='Gautham'/>,
+      document.getElementById('myDiv')
+      );
+    </script>
+  </body>
+</html>
