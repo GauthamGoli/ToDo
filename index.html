@@ -8,48 +8,100 @@
   <body>
     <div id="myDiv"></div>
     <script type="text/babel">
-
-    var FilteredList = React.createClass({
-      addToList: function(event){
-        var updatedList = this.state.initialItems;
-        if(this.state.value!==''){        
-        updatedList.unshift(this.state.value);
-      }        
-        this.setState({items: updatedList, value: ''});
+    var ToDoBox = React.createClass({
+      getInitalState: function(){
+        return({items:[]});
       },
-      handleToDo: function(event){
-        this.setState({toDoItem: event.target.value, value: event.target.value});
+      componentWillMount: function(){
+        this.setState({items: []});
       },
-  getInitialState: function(){
-     return {
-       initialItems: [         
-       ],
-       items: [],
-       value: ''
-     }
-  },
-  componentWillMount: function(){
-    this.setState({items: this.state.initialItems})
-  },
-  render: function(){
-    return (
-      <div className="filter-list">
-        <input type="text" value={this.state.value} onChange={this.handleToDo}/>
-        <button type="button" onClick={this.addToList}>ToDo</button>
-        <div>{
-        this.state.items.map(function(item) {
-          return <div><input type="checkbox"/>{item}</div>
-          }) 
-        }
-        </div>
-      </div>
-    );
-  }
-});
+      handleToDoSubmit: function(ToDoItem){
+        var newItems = this.state.items.concat([ToDoItem]);
+        this.setState({items:newItems});
+      },
+      handleToDoCheck: function(e){
+        var pos = this.state.items.indexOf(e.target.value);
+        var newItems = this.state.items;
+        newItems.splice(pos, 1);
+        this.setState({items:newItems});
+      },
+      render: function(){
+        return (
+          <div className="todoBox">          
+            <ToDoForm onToDoSubmit={this.handleToDoSubmit}/>
+            <ToDoList items={this.state.items} onToDoCheck={this.handleToDoCheck} />            
+          </div>
+          );
+      }
+    });
 
+    var ToDoList = React.createClass({
+
+      render: function(){
+        var ToDoNode = this.props.items.map(function(item){
+          return (
+            <ToDo onToDoCheck={this.props.onToDoCheck}>
+            {item}
+            </ToDo>
+            );
+        }.bind(this)
+        );
+        return (
+          <div className="todoList">
+          {ToDoNode}
+          </div>
+          );
+      }
+    });
+
+    var ToDo = React.createClass({
+      render: function(){
+        return(
+          <div>
+            <div>
+            <input type="checkbox" id={this.props.children} onChange={this.props.onToDoCheck}/>{this.props.children}
+            </div>
+          </div>
+          );
+      }
+    });
+
+    var ToDoForm = React.createClass({
+      getInitalState: function(){
+        return ({text:''});
+      },
+      handleTextChange: function(e){
+        this.setState({text:e.target.value});
+      },
+      handleSubmit: function(e){
+        e.preventDefault();
+        var text = this.state.text.trim();
+        if(!text){
+          return;
+        }        
+        this.props.onToDoSubmit(this.state.text);
+        this.setState({text:''});
+      },
+      componentWillMount: function(){
+        this.setState({text:""});
+      },      
+      render: function(){
+        return (
+          <form onSubmit={this.handleSubmit}>
+          <input type="text" 
+            placeholder=""
+            value={this.state.text}
+            onChange={this.handleTextChange} />
+
+          <input type="submit" value="ToDo this" />
+          </form>
+          );
+      }
+    });
+    
 
     ReactDOM.render(
-      <FilteredList name='Gautham'/>,
+      <ToDoBox/>,
       document.getElementById('myDiv')
       );
     </script>
