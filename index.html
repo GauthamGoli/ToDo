@@ -11,8 +11,10 @@
 
     var FilteredList = React.createClass({
       addToList: function(event){
-        var updatedList = this.state.initialItems;        
-        updatedList.unshift(this.state.toDoItem);        
+        var updatedList = this.state.initialItems;
+        if(this.state.value!==''){        
+        updatedList.unshift(this.state.value);
+      }        
         this.setState({items: updatedList, value: ''});
       },
       handleToDo: function(event){
