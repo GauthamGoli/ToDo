@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>React JS with Google Charts Component</title>
+    <script src='https://www.google.com/jsapi'></script>
+    <script src='http://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.min.js'></script>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <script type="text/javascript">
+    google.load('visualization', '1.0', {'packages':['corechart']});
+    google.setOnLoadCallback(init);
+    var Chart = React.createClass({
+      displayName: "Chart",
+
+      getInitalState: function(){
+        return {
+          data: this.getData()
+        };
+      },
+      render: function() {
+        return React.DOM.div({
+          id: this.props.graphName,
+          style: {
+            width: '800px',
+            height: '500px'
+          }
+        });
+      },
+      componentDidMount: function(){
+        this.draw();
+        // Incase real time data is coming
+        // this.interval = setInterval(this.update,4000);
+      },
+      draw: function(){
+        var data = this.getData();
+        var options = {'title': this.props.graphTitle };
+        var element = document.getElementById(this.props.graphName);
+        var chart = new google.visualization.BarChart(element);
+        chart.draw(data, options);
+      },
+      getData: function(){
+        return google.visualization.arrayToDataTable(this.props.graphData);
+      }
+    });
+    function init() {
+      var graphData = [['Hub', 'Avg Time Elapsed'],['Andheri', 3],['Andheri East', 1],['Powai', 1],['Zucchini', 1],['Andheri West', 2]]
+      React.render(React.createElement(
+        Chart,
+        {graphName:"line",
+         graphTitle:"Average Time Elapsed for all vehicles per hub",
+         graphData:graphData}
+        ),
+         document.body
+        );
+    }
+    </script>
+  </body>
+</html>
