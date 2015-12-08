@@ -5,12 +5,60 @@
     <title>React JS with Google Charts Component</title>
     <script src='https://www.google.com/jsapi'></script>
     <script src='http://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.min.js'></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script type="text/javascript" src="http://www.parsecdn.com/js/parse-latest.js"></script>
+    <script type="text/javascript" src="js/cred.js"></script>
     <link rel="stylesheet" href="css/style.css">
   </head>
   <body>
     <script type="text/javascript">
+    Parse.initialize(cl, cs);
     google.load('visualization', '1.0', {'packages':['corechart']});
-    google.setOnLoadCallback(init);
+    //google.setOnLoadCallback(init);
+    Parse.User.logIn(p_username, p_pwd, {
+  success: function(user) {
+    // Do stuff after successful login.
+  },
+  error: function(user, error) {
+    // The login failed. Check error to see why.
+  }
+});
+
+    var Orders = Parse.Object.extend("Orders");
+    var query = new Parse.Query(Orders);
+    query.find({
+      success: function(results) {
+        
+        // graphData = {hubid1:{date1:total_time_elapsed,date2:total_time_elapsed,...}
+        //              hubid2:{date1:total_time_elapsed,date2:total_time_elapsed,...},..}
+        // this will be sent to the React Component as a property
+        graphData = {};
+        for (var i = 0; i < results.length; i++) {
+          var order = results[i];
+          var hub_id = order.get("hubid");
+          var date = new Date(order.get("orderdatetime"));
+          var date_string = date.toDateString();
+          var time_elapased = order.get("timeelapsed");          
+          if(graphData.hasOwnProperty(hub_id)){
+            if(graphData[hub_id].hasOwnProperty(date_string)){
+              graphData.hub_id[date_string] += time_elapased;
+            }
+            else{
+              graphData[hub_id][date_string] = time_elapased;
+            }
+          }
+          else{
+            var a = {date_string:time_elapased};
+            //console.log(hub_id);
+            graphData[hub_id] = a;
+          }
+        }
+      },
+      error: function(error) {
+        alert("Error: " + error.code + " " + error.message);
+      }
+    });
+
     var Chart = React.createClass({
       displayName: "Chart",
 
@@ -45,7 +93,7 @@
       }
     });
     function init() {
-      var graphData = [['Hub', 'Avg Time Elapsed'],['Andheri', 3],['Andheri East', 1],['Powai', 1],['Zucchini', 1],['Andheri West', 2]]
+      var graphData = [['Hub', 'Avg Time Elapsed'],['Andheri', 3],['Andheri East', 1],['Powai', 1],['Zucchini', 1],['Andheri West', 2]];
       React.render(React.createElement(
         Chart,
         {graphName:"line",
