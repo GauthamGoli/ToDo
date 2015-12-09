@@ -31,7 +31,7 @@
         return(
           <div>
             <MenuBar onHubChange={this.onHubChange} onResolutionChange={this.onResolutionChange} hubs={this.props.hubs}/>
-            <GraphBox hub={this.state.hub} resolution={this.state.resolution}/>
+            <GraphBox hub={this.state.hub} resolution={this.state.resolution} />
           </div>
           ); 
       }
@@ -65,7 +65,7 @@
           return(<option value={time}> {time} </option>)
         }
         return(
-          <span>
+          <span className="timeline">
             <select onChange={this.props.onChange}> {this.props.times.map(createTimeOption)}</select> 
           </span>
           );
@@ -73,9 +73,15 @@
     });
 
     var GraphBox = React.createClass({
+      getInitalState: function(){
+        return {graphdata:[]};
+      },
+      componentDidMount: function(){
+
+      },
       render: function(){
         return(
-          <div> graph appears here {this.props.resolution} </div>
+          <div id="line" style={{width:'800px'}, {height:'500px'}}> graph appears here {this.props.resolution} for {this.props.hub} </div>
           );
       }
     });
