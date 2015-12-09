@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>React JS with Google Charts Component</title>
+    <script src='https://www.google.com/jsapi'></script>
+    <script src='http://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.js'></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script type="text/javascript" src="http://www.parsecdn.com/js/parse-latest.js"></script>
+    <script type="text/javascript" src="js/credentials.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <script type="text/javascript">
+      google.load('visualization', '1', {'packages': ['corechart']});
+      google.setOnLoadCallback(init);    
+      var Dashboard = React.createClass({
+        displayName: "Dashboard",
+
+        onHubChange: function onHubChange(e) {
+          this.setState({ hub: e.target.value });
+        },
+        onResolutionChange: function onResolutionChange(e) {
+          this.setState({ resolution: e.target.value });
+        },
+        getInitalState: function getInitalState() {
+          return { resolution: "today", hub: "hub1" };
+        },
+        componentWillMount: function componentWillMount() {
+          this.setState({ resolution: "today", hub: "hub1" });
+        },
+        render: function render() {
+          return React.createElement(
+            "div",
+            null,
+            React.createElement(MenuBar, { onHubChange: this.onHubChange, onResolutionChange: this.onResolutionChange, hubs: this.props.hubs }),
+            React.createElement(GraphBox, { hub: this.state.hub, resolution: this.state.resolution })
+          );
+        }
+      });
+
+      var MenuBar = React.createClass({
+        displayName: "MenuBar",
+
+        render: function render() {
+          return React.createElement(
+            "div",
+            null,
+            React.createElement(HubMenu, { onChange: this.props.onHubChange, hubs: this.props.hubs }),
+            React.createElement(TimeLine, { onChange: this.props.onResolutionChange, times: ['today', 'weekbyweek', 'MonthByMonth'] })
+          );
+        }
+      });
+
+      var HubMenu = React.createClass({
+        displayName: "HubMenu",
+
+        render: function render() {
+          var createoption = function createoption(option) {
+            return React.createElement(
+              "option",
+              { value: option },
+              " ",
+              option,
+              " "
+            );
+          };
+          return React.createElement(
+            "select",
+            { onChange: this.props.onChange },
+            this.props.hubs.map(createoption)
+          );
+        }
+      });
+
+      var TimeLine = React.createClass({
+        displayName: "TimeLine",
+
+        render: function render() {
+          var createTimeOption = function createTimeOption(time) {
+            return React.createElement(
+              "option",
+              { value: time },
+              " ",
+              time,
+              " "
+            );
+          };
+          return React.createElement(
+            "span",
+            { className: "timeline" },
+            React.createElement(
+              "select",
+              { onChange: this.props.onChange },
+              " ",
+              this.props.times.map(createTimeOption)
+            )
+          );
+        }
+      });
+
+      var GraphBox = React.createClass({
+        displayName: "GraphBox",
+
+        getInitalState: function getInitalState() {
+          return { graphdata: [] };
+        },
+        componentWillMount: function componentWillMount(){
+          this.setState({graphdata: [['dum1','time1'],['hub1',25],['hub2',50]]});
+        },
+        componentDidMount: function componentDidMount() {
+          var data = google.visualization.arrayToDataTable(this.state.graphdata);
+          var options = {
+            title: this.props.hub
+            };
+          var element = document.getElementById("line");
+          var chart = new google.visualization.ColumnChart(element);
+          chart.draw(data, options);          
+        },
+        render: function render() {
+          return React.createElement(
+            "div",
+            { id: "line", style: ({ width: '800px' }, { height: '500px' }) },
+            " "
+          );
+        }
+      });
+      function init(){
+      React.render(React.createElement(Dashboard, { hubs: ["hub1", "hub2"] }), document.body);}
+    </script>
+
+
+  </body>
+</html>
