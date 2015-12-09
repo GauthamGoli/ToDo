@@ -69,14 +69,17 @@
               var hub_id = order.get("hubid");
               var order_date = new Date(order.get("orderdatetime").substr(0,10));
               var time_elapased = order.get("timeelapsed");
+              //flag is to check if order_date is already present in graph_data
               var flag = false;
               for(var i=0;i<graph_data.length;i++){        
                 if(order_date.toDateString()==graph_data[i][0].toDateString()){
+                  // #TODO: On the same date and if hub is already present elapased time has to be aggregated 
                   graph_data[i][1].push([hub_id,time_elapased]);
                   flag = true;                
                   break;
                 }
               }
+              //if order_date is not already present, create a new entry
               if(flag==false){              
                 graph_data.push([order_date,[]]);
                 graph_data[0][1].push([hub_id,time_elapased]);
@@ -87,7 +90,9 @@
             alert("Error: " + error.code + " " + error.message);
           }
         });
-        console.log(graph_data);                
+        console.log(graph_data);
+        // empty array is getting returned?? 
+        return graph_data;                
       }
     });
     function init() {
