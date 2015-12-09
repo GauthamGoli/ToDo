@@ -7,14 +7,13 @@
     <script src='http://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.min.js'></script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script type="text/javascript" src="http://www.parsecdn.com/js/parse-latest.js"></script>
-    <script type="text/javascript" src="js/cred.js"></script>
+    <script type="text/javascript" src="js/credentials.js"></script>
     <link rel="stylesheet" href="css/style.css">
   </head>
   <body>
     <script type="text/javascript">
     Parse.initialize(cl, cs);
-    google.load('visualization', '1.0', {'packages':['corechart']});
-    //google.setOnLoadCallback(init);
+    
     Parse.User.logIn(p_username, p_pwd, {
   success: function(user) {
     // Do stuff after successful login.
@@ -24,40 +23,9 @@
   }
 });
 
-    var Orders = Parse.Object.extend("Orders");
-    var query = new Parse.Query(Orders);
-    query.find({
-      success: function(results) {
-        
-        // graphData = {hubid1:{date1:total_time_elapsed,date2:total_time_elapsed,...}
-        //              hubid2:{date1:total_time_elapsed,date2:total_time_elapsed,...},..}
-        // this will be sent to the React Component as a property
-        graphData = {};
-        for (var i = 0; i < results.length; i++) {
-          var order = results[i];
-          var hub_id = order.get("hubid");
-          var date = new Date(order.get("orderdatetime"));
-          var date_string = date.toDateString();
-          var time_elapased = order.get("timeelapsed");          
-          if(graphData.hasOwnProperty(hub_id)){
-            if(graphData[hub_id].hasOwnProperty(date_string)){
-              graphData.hub_id[date_string] += time_elapased;
-            }
-            else{
-              graphData[hub_id][date_string] = time_elapased;
-            }
-          }
-          else{
-            var a = {date_string:time_elapased};
-            //console.log(hub_id);
-            graphData[hub_id] = a;
-          }
-        }
-      },
-      error: function(error) {
-        alert("Error: " + error.code + " " + error.message);
-      }
-    });
+    
+    google.load('visualization', '1.0', {'packages':['corechart']});
+    google.setOnLoadCallback(init);
 
     var Chart = React.createClass({
       displayName: "Chart",
@@ -82,23 +50,52 @@
         // this.interval = setInterval(this.update,4000);
       },
       draw: function(){
-        var data = this.getData();
+        var graph_data = this.getData();
+        var data = google.visualization.arrayToDataTable(graph_data); 
         var options = {'title': this.props.graphTitle };
         var element = document.getElementById(this.props.graphName);
         var chart = new google.visualization.BarChart(element);
         chart.draw(data, options);
       },
       getData: function(){
-        return google.visualization.arrayToDataTable(this.props.graphData);
+        // graph_data is an array [[date,[[hub1,time],[hub2,time2]...]],[date2,[[hub1,time],[hub2,time]..]]..]
+        var graph_data = [];
+        var Orders = Parse.Object.extend("Orders");
+        var query = new Parse.Query(Orders);
+        query.find({
+          success: function(results) {
+            for(var j=0;j<results.length;j++){
+              var order = results[j];
+              var hub_id = order.get("hubid");
+              var order_date = new Date(order.get("orderdatetime").substr(0,10));
+              var time_elapased = order.get("timeelapsed");
+              var flag = false;
+              for(var i=0;i<graph_data.length;i++){        
+                if(order_date.toDateString()==graph_data[i][0].toDateString()){
+                  graph_data[i][1].push([hub_id,time_elapased]);
+                  flag = true;                
+                  break;
+                }
+              }
+              if(flag==false){              
+                graph_data.push([order_date,[]]);
+                graph_data[0][1].push([hub_id,time_elapased]);
+              }          
+            }   
+          },
+          error: function(error) {
+            alert("Error: " + error.code + " " + error.message);
+          }
+        });
+        console.log(graph_data);                
       }
     });
     function init() {
-      var graphData = [['Hub', 'Avg Time Elapsed'],['Andheri', 3],['Andheri East', 1],['Powai', 1],['Zucchini', 1],['Andheri West', 2]];
       React.render(React.createElement(
         Chart,
         {graphName:"line",
          graphTitle:"Average Time Elapsed for all vehicles per hub",
-         graphData:graphData}
+        }
         ),
          document.body
         );
