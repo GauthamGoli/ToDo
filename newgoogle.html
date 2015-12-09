@@ -109,13 +109,25 @@
           this.setState({graphdata: [['dum1','time1'],['hub1',25],['hub2',50]]});
         },
         componentDidMount: function componentDidMount() {
-          var data = google.visualization.arrayToDataTable(this.state.graphdata);
+          var data = this.getData();
           var options = {
             title: this.props.hub
             };
           var element = document.getElementById("line");
           var chart = new google.visualization.ColumnChart(element);
           chart.draw(data, options);          
+        },
+        componentDidUpdate: function componentWillUpdate(){
+          var data = this.getData();
+          var options = {
+            title: this.props.hub
+          };
+          var element = document.getElementById("line");
+          var chart = new google.visualization.ColumnChart(element);
+          chart.draw(data, options);
+        },
+        getData: function() {
+          return google.visualization.arrayToDataTable(this.state.graphdata);
         },
         render: function render() {
           return React.createElement(
