@@ -221,15 +221,16 @@
             alert("Error: " + error.code + " " + error.message);
           }
         });   
-          
-
+                    
+        },
+        componentWillUpdate: function componentWillUpdate(){
           var data = google.visualization.arrayToDataTable(this.state.graphdata);
           var options = {
             title: "Total Waiting time for "+ this.props.hub+"  on "+this.props.resolution
             };
           var element = document.getElementById("line");
           var chart = new google.visualization.ColumnChart(element);
-          chart.draw(data, options);          
+          chart.draw(data, options);                    
         },
         render: function render() {
           return React.createElement(
