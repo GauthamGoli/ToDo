@@ -12,6 +12,16 @@
   </head>
   <body>
     <script type="text/javascript">
+    Parse.initialize(cl, cs);
+    
+    Parse.User.logIn(p_username, p_pwd, {
+  success: function(user) {
+    // Do stuff after successful login.
+  },
+  error: function(user, error) {
+    // The login failed. Check error to see why.
+  }
+});
       google.load('visualization', '1', {'packages': ['corechart']});
       google.setOnLoadCallback(init);    
       var Dashboard = React.createClass({
@@ -24,10 +34,10 @@
           this.setState({ resolution: e.target.value });
         },
         getInitalState: function getInitalState() {
-          return { resolution: "today", hub: "hub1" };
+          return { resolution: "today", hub: this.props.hubs[0] };
         },
         componentWillMount: function componentWillMount() {
-          this.setState({ resolution: "today", hub: "hub1" });
+          this.setState({ resolution: "today", hub: this.props.hubs[0] });
         },
         render: function render() {
           return React.createElement(
@@ -106,28 +116,120 @@
           return { graphdata: [] };
         },
         componentWillMount: function componentWillMount(){
-          this.setState({graphdata: [['dum1','time1'],['hub1',25],['hub2',50]]});
+          date_today = new Date().toISOString().substr(0,10);
+          this.setState({graphdata: [['dum1','time1'],[date_today,0]]});
         },
         componentDidMount: function componentDidMount() {
-          var data = this.getData();
+          var Orders = Parse.Object.extend("Orders");
+          var query = new Parse.Query(Orders);
+          var graph_data = [];
+          var that = this;
+          query.equalTo("hubid",that.props.hub);
+          if(that.props.resolution=="today"){
+            today_date = new Date();
+            dates_array=[];            
+            today_date = today_date.toISOString().substr(0,10);
+            query.startsWith("orderdatetime", today_date);            
+            dates_array.push([today_date]);
+            //that.setState({"graphdata":[["hub","Total waiting time"],[today_date]]});
+          }
+          else if(that.props.resolution=="weekbyweek"){
+            today_date = new Date();
+            dates_array = [];
+            for(var i=0;i<7;i++){
+              dates_array.push([new Date(today_date.getTime()-24*60*60*1000*i).toISOString().substr(0,10)]);
+            }
+            week_ago_date = new Date(today_date.getTime()-24*60*60*1000*6).toISOString().substr(0,10);
+            today_date = today_date.toISOString();
+            query.greaterThanOrEqualTo("orderdatetime",week_ago_date);
+            query.lessThanOrEqualTo("orderdatetime",today_date);
+          }
+          query.find({
+            success: function(results) {              
+              
+              for(var j=0;j<dates_array.length;j++){
+                var waiting_time = 0;
+                for(var k=0;k<results.length;k++){
+                  if(results[k].get("orderdatetime").substr(0,10)==dates_array[j][0]){
+                    waiting_time += results[k].get("waitingtime");
+                  }                              
+                }
+                dates_array[j].push(waiting_time);
+              }
+              dates_array.unshift(['hubid',"total waiting time"]);
+              that.setState({"graphdata":dates_array});
+              //console.log(that.state.graphdata);
+              //console.log("llook here");
+          },
+          error: function(error) {
+            alert("Error: " + error.code + " " + error.message);
+          }
+        });   
+          
+
+          var data = google.visualization.arrayToDataTable(this.state.graphdata);
           var options = {
-            title: this.props.hub
+            title: "Total Waiting time for "+ this.props.hub+"  on "+this.props.resolution
             };
           var element = document.getElementById("line");
           var chart = new google.visualization.ColumnChart(element);
           chart.draw(data, options);          
         },
-        componentDidUpdate: function componentWillUpdate(){
-          var data = this.getData();
+        componentWillReceiveProps: function componentWillReceiveProps(){
+          var Orders = Parse.Object.extend("Orders");
+          var query = new Parse.Query(Orders);
+          var graph_data = [];
+          var that = this;
+          query.equalTo("hubid",that.props.hub);
+          if(that.props.resolution=="today"){
+            today_date = new Date();
+            dates_array=[];            
+            today_date = today_date.toISOString().substr(0,10);
+            query.startsWith("orderdatetime", today_date);            
+            dates_array.push([today_date]);
+            //that.setState({"graphdata":[["hub","Total waiting time"],[today_date]]});
+          }
+          else if(that.props.resolution=="weekbyweek"){
+            today_date = new Date();
+            dates_array = [];
+            for(var i=0;i<7;i++){
+              dates_array.push([new Date(today_date.getTime()-24*60*60*1000*i).toISOString().substr(0,10)]);
+            }
+            week_ago_date = new Date(today_date.getTime()-24*60*60*1000*6).toISOString().substr(0,10);
+            today_date = today_date.toISOString();
+            query.greaterThanOrEqualTo("orderdatetime",week_ago_date);
+            query.lessThanOrEqualTo("orderdatetime",today_date);
+          }
+          query.find({
+            success: function(results) {              
+              
+              for(var j=0;j<dates_array.length;j++){
+                var waiting_time = 0;
+                for(var k=0;k<results.length;k++){
+                  if(results[k].get("orderdatetime").substr(0,10)==dates_array[j][0]){
+                    waiting_time += results[k].get("waitingtime");
+                  }                              
+                }
+                dates_array[j].push(waiting_time);
+              }
+              dates_array.unshift(['hubid',"total waiting time"]);
+              that.setState({"graphdata":dates_array});
+              //console.log(that.state.graphdata);
+              //console.log("llook here");
+          },
+          error: function(error) {
+            alert("Error: " + error.code + " " + error.message);
+          }
+        });   
+          
+
+          var data = google.visualization.arrayToDataTable(this.state.graphdata);
           var options = {
-            title: this.props.hub
-          };
+            title: "Total Waiting time for "+ this.props.hub+"  on "+this.props.resolution
+            };
           var element = document.getElementById("line");
           var chart = new google.visualization.ColumnChart(element);
-          chart.draw(data, options);
-        },
-        getData: function() {
-          return google.visualization.arrayToDataTable(this.state.graphdata);
+          chart.draw(data, options);          
         },
         render: function render() {
           return React.createElement(
@@ -138,7 +240,7 @@
         }
       });
       function init(){
-      React.render(React.createElement(Dashboard, { hubs: ["hub1", "hub2"] }), document.body);}
+      React.render(React.createElement(Dashboard, { hubs: ["3bn1lHqn9b", "2as3FzQkVN"] }), document.body);}
     </script>
 
 
