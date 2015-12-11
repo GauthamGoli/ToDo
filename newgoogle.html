@@ -2,15 +2,16 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>React JS with Google Charts Component</title>
-    <script src='https://www.google.com/jsapi'></script>
+    <title>React JS with Plotly Component</title>
+    
     <script src='http://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react.js'></script>
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script type="text/javascript" src="js/plotly-latest.min.js"></script>
     <script type="text/javascript" src="http://www.parsecdn.com/js/parse-latest.js"></script>
     <script type="text/javascript" src="js/credentials.js"></script>
     <link rel="stylesheet" href="css/style.css">
   </head>
   <body>
+
     <script type="text/javascript">
     Parse.initialize(cl, cs);
     
@@ -22,8 +23,6 @@
     // The login failed. Check error to see why.
   }
 });
-      google.load('visualization', '1', {'packages': ['corechart']});
-      google.setOnLoadCallback(init);    
       var Dashboard = React.createClass({
         displayName: "Dashboard",
 
@@ -127,7 +126,8 @@
           query.equalTo("hubid",that.props.hub);
           if(that.props.resolution=="today"){
             today_date = new Date();
-            dates_array=[];            
+            dates_array=[]; 
+            waiting_time_array=[0];           
             today_date = today_date.toISOString().substr(0,10);
             query.startsWith("orderdatetime", today_date);            
             dates_array.push([today_date]);
@@ -136,8 +136,10 @@
           else if(that.props.resolution=="weekbyweek"){
             today_date = new Date();
             dates_array = [];
+            waiting_time_array = [];
             for(var i=0;i<7;i++){
               dates_array.push([new Date(today_date.getTime()-24*60*60*1000*i).toISOString().substr(0,10)]);
+              waiting_time_array.push(0);
             }
             week_ago_date = new Date(today_date.getTime()-24*60*60*1000*6).toISOString().substr(0,10);
             today_date = today_date.toISOString();
@@ -147,17 +149,23 @@
           query.find({
             success: function(results) {              
               
-              for(var j=0;j<dates_array.length;j++){
-                var waiting_time = 0;
+              for(var j=0;j<dates_array.length;j++){              
                 for(var k=0;k<results.length;k++){
                   if(results[k].get("orderdatetime").substr(0,10)==dates_array[j][0]){
-                    waiting_time += results[k].get("waitingtime");
+                    waiting_time_array[j] += results[k].get("waitingtime");
                   }                              
                 }
-                dates_array[j].push(waiting_time);
+                //dates_array[j].push(waiting_time);
               }
-              dates_array.unshift(['hubid',"total waiting time"]);
-              that.setState({"graphdata":dates_array});
+              //dates_array.unshift(['hubid',"total waiting time"]);
+              that.setState({"graphdata":[
+              {
+                x: dates_array,
+                y: waiting_time_array,
+                type: 'bar'
+              }
+                ]});
+              
               //console.log(that.state.graphdata);
               //console.log("llook here");
           },
@@ -167,13 +175,15 @@
         });   
           
 
-          var data = google.visualization.arrayToDataTable(this.state.graphdata);
-          var options = {
-            title: "Total Waiting time for "+ this.props.hub+"  on "+this.props.resolution
-            };
-          var element = document.getElementById("line");
-          var chart = new google.visualization.ColumnChart(element);
-          chart.draw(data, options);          
+          //var data = google.visualization.arrayToDataTable(this.state.graphdata);
+          var data = this.state.graphdata;
+          //var options = {
+           // title: "Total Waiting time for "+ this.props.hub+"  on "+this.props.resolution
+            //};
+          //var element = document.getElementById("line");
+          //var chart = new google.visualization.ColumnChart(element);
+          //chart.draw(data, options);          
+          Plotly.newPlot('test', data);
         },
         componentWillReceiveProps: function componentWillReceiveProps(){
           var Orders = Parse.Object.extend("Orders");
@@ -183,7 +193,8 @@
           query.equalTo("hubid",that.props.hub);
           if(that.props.resolution=="today"){
             today_date = new Date();
-            dates_array=[];            
+            dates_array=[]; 
+            waiting_time_array=[0];           
             today_date = today_date.toISOString().substr(0,10);
             query.startsWith("orderdatetime", today_date);            
             dates_array.push([today_date]);
@@ -192,8 +203,10 @@
           else if(that.props.resolution=="weekbyweek"){
             today_date = new Date();
             dates_array = [];
+            waiting_time_array = [];
             for(var i=0;i<7;i++){
               dates_array.push([new Date(today_date.getTime()-24*60*60*1000*i).toISOString().substr(0,10)]);
+              waiting_time_array.push(0);
             }
             week_ago_date = new Date(today_date.getTime()-24*60*60*1000*6).toISOString().substr(0,10);
             today_date = today_date.toISOString();
@@ -203,45 +216,45 @@
           query.find({
             success: function(results) {              
               
-              for(var j=0;j<dates_array.length;j++){
-                var waiting_time = 0;
+              for(var j=0;j<dates_array.length;j++){              
                 for(var k=0;k<results.length;k++){
                   if(results[k].get("orderdatetime").substr(0,10)==dates_array[j][0]){
-                    waiting_time += results[k].get("waitingtime");
+                    waiting_time_array[j] += results[k].get("waitingtime");
                   }                              
                 }
-                dates_array[j].push(waiting_time);
+                //dates_array[j].push(waiting_time);
               }
-              dates_array.unshift(['hubid',"total waiting time"]);
-              that.setState({"graphdata":dates_array});
+              //dates_array.unshift(['hubid',"total waiting time"]);
+              that.setState({"graphdata":[
+              {
+                x: dates_array,
+                y: waiting_time_array,
+                type: 'bar'
+              }
+                ]});
+              
               //console.log(that.state.graphdata);
               //console.log("llook here");
           },
           error: function(error) {
             alert("Error: " + error.code + " " + error.message);
           }
-        });   
-                    
+        });    
+
         },
         componentWillUpdate: function componentWillUpdate(){
-          var data = google.visualization.arrayToDataTable(this.state.graphdata);
-          var options = {
-            title: "Total Waiting time for "+ this.props.hub+"  on "+this.props.resolution
-            };
-          var element = document.getElementById("line");
-          var chart = new google.visualization.ColumnChart(element);
-          chart.draw(data, options);                    
+          var data = this.state.graphdata;
+          Plotly.newPlot('test', data);                    
         },
         render: function render() {
           return React.createElement(
             "div",
-            { id: "line", style: ({ width: '800px' }, { height: '500px' }) },
+            { id: "test", style: ({ width: '480px' }, { height: '400px' }) },
             " "
           );
         }
       });
-      function init(){
-      React.render(React.createElement(Dashboard, { hubs: ["3bn1lHqn9b", "2as3FzQkVN"] }), document.body);}
+      React.render(React.createElement(Dashboard, { hubs: ["3bn1lHqn9b", "2as3FzQkVN"] }), document.body);
     </script>
 
 
