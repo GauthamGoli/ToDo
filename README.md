@@ -4,3 +4,4 @@
 
 This is a simple ToDo App, being made to learn [ReactJS](http://facebook.github.io/react/index.html)
 
+Also implements some plots and graphs for dashboard display
